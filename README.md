@@ -35,7 +35,7 @@ Personal Finance Express is a daily financial tracking system that helps record 
 
 ## Usage
 
-1. Configure the database connection in `personal-finance.js`.
+1. Configure the database connection in `db.js`.
 2. Start the server:
    ```bash
    node .
