@@ -13,24 +13,24 @@ Personal Finance Express is a daily financial tracking system that helps record 
    git clone https://github.com/KaruniaSyukurBaeha/personal-finance-express.git
 
 2. Navigate to the project directory:
- ```bash
+   ```bash
    cd personal-finance-express
- ```
+   ```
 
 3. Install all dependencies from `package.json`:
- ```bash
+   ```bash
    npm install
- ```
+   ```
 
 4. Or install core packages manually:
- ```bash
+   ```bash
    npm install --save express mysql body-parser
- ```
+   ```
 
 5. Install nodemon for development with hot-reload:
- ```bash
+   ```bash
    npm install nodemon
- ```
+   ```
 
 
 ## Usage
