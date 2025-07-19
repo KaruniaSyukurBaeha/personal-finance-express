@@ -1,6 +1,7 @@
 const express    = require('express');
 const bodyParser = require('body-parser');
 const app        = express();
+const cors = require('cors');
 const port       = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
@@ -12,9 +13,10 @@ const transactionsRouter = require('./routes/transactions');
 const financeRouter      = require('./routes/finance');
 
 // Routers
-app.use('/api/categories',   categoriesRouter);
-app.use('/api/transactions', transactionsRouter);
-app.use('/api',              financeRouter);
+app.use(cors());
+app.use('/category',   categoriesRouter);
+app.use('/transaction', transactionsRouter);
+app.use('',              financeRouter);
 
 // fallback 404
 app.use((req, res) => {
