@@ -6,12 +6,13 @@ const pool    = require('../db');
 router.post('/', (req, res) => {
   const { entry_type, amount, category_id, txn_date, description } = req.body;
   pool.query(
-    'INSERT INTO transactions (entry_type,amount,category_id,txn_date,description) VALUES (?,?,?,?,?)',
+    'INSERT INTO transactions (entry_type, amount, category_id, txn_date, description) VALUES (?, ?, ?, ?, ?)',
     [entry_type, amount, category_id, txn_date, description],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) return res.status(500).json({ message: 'DB insert error', error: err });
       const newId = result.insertId;
-      // Setelah insert, ambil kembali record lengkap dengan JOIN
+
+      // Ambil record lengkap dengan JOIN
       pool.query(
         `SELECT 
            t.id, t.entry_type, t.amount, t.category_id, c.name AS category_name, 
@@ -21,8 +22,13 @@ router.post('/', (req, res) => {
          WHERE t.id = ?`,
         [newId],
         (err2, rows) => {
-          if (err2) return res.status(500).json(err2);
-          res.status(201).json(rows[0]);
+          if (err2) return res.status(500).json({ message: 'DB fetch error', error: err2 });
+          if (!rows.length) return res.status(404).json({ message: 'Transaction not found' });
+
+          res.status(201).json({
+            message: 'Transaksi berhasil dibuat',
+            data: rows[0]
+          });
         }
       );
     }
@@ -39,7 +45,7 @@ router.get('/', (req, res) => {
      JOIN categories c ON c.id = t.category_id
      ORDER BY t.txn_date DESC`,
     (err, rows) => {
-      if (err) return res.status(500).json(err);
+      if (err) return res.status(500).json({ message: 'DB fetch error', error: err });
       res.json(rows);
     }
   );
@@ -56,8 +62,9 @@ router.get('/:id', (req, res) => {
      WHERE t.id = ?`,
     [req.params.id],
     (err, rows) => {
-      if (err) return res.status(500).json(err);
-      res.json(rows[0] || {});
+      if (err) return res.status(500).json({ message: 'DB fetch error', error: err });
+      if (!rows.length) return res.status(404).json({ message: 'Transaction not found' });
+      res.json(rows[0]);
     }
   );
 });
@@ -66,11 +73,12 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
   const { entry_type, amount, category_id, txn_date, description } = req.body;
   pool.query(
-    'UPDATE transactions SET entry_type=?,amount=?,category_id=?,txn_date=?,description=? WHERE id=?',
+    'UPDATE transactions SET entry_type=?, amount=?, category_id=?, txn_date=?, description=? WHERE id=?',
     [entry_type, amount, category_id, txn_date, description, req.params.id],
     (err) => {
-      if (err) return res.status(500).json(err);
-      // Setelah update, return object terbaru dengan JOIN
+      if (err) return res.status(500).json({ message: 'DB update error', error: err });
+
+      // Ambil kembali record terbaru
       pool.query(
         `SELECT 
            t.id, t.entry_type, t.amount, t.category_id, c.name AS category_name, 
@@ -80,8 +88,13 @@ router.put('/:id', (req, res) => {
          WHERE t.id = ?`,
         [req.params.id],
         (err2, rows) => {
-          if (err2) return res.status(500).json(err2);
-          res.json(rows[0]);
+          if (err2) return res.status(500).json({ message: 'DB fetch error', error: err2 });
+          if (!rows.length) return res.status(404).json({ message: 'Transaction not found' });
+
+          res.json({
+            message: 'Transaksi berhasil diperbarui',
+            data: rows[0]
+          });
         }
       );
     }
@@ -90,9 +103,12 @@ router.put('/:id', (req, res) => {
 
 // DELETE
 router.delete('/:id', (req, res) => {
-  pool.query('DELETE FROM transactions WHERE id=?', [req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: 'Transaction deleted' });
+  pool.query('DELETE FROM transactions WHERE id = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ message: 'DB delete error', error: err });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    res.json({ message: 'Transaksi berhasil dihapus' });
   });
 });
 
